@@ -190,6 +190,49 @@ app.get("/getSingleProduct/:id", async (req, res) => {
   }
 });
 
+// UPDATE PRODUCT
+app.patch("/updateSingleProduct/:id", async (req, res) => {
+  try {
+    const productid = req.params.id;
+
+    const productSchema = joi.object({
+      name: joi.string(),
+      price: joi.number().min(0),
+      description: joi.string(),
+      category: joi.string(),
+      sku: joi.string(),
+    });
+
+    const { error } = productSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        message: error.details[0].message,
+      });
+    }
+
+    const existingproduct = await ProductModel.findById(productid);
+
+    if (!existingproduct) {
+      res.status(404).send({ message: "Product already exist" });
+    }
+
+    const updateProduct = await ProductModel.findByIdAndUpdate(
+      productid,
+      req.body,
+      {
+        new: true,
+      },
+    );
+
+    res.status(201).send({
+      message: "Product updated successfully",
+      product: updateProduct,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Invalid server error" });
+  }
+});
 // DELETE PRODUCT BY ID
 app.delete("/deleteProduct/:id", async (req, res) => {
   try {
@@ -214,6 +257,7 @@ app.delete("/deleteProduct/:id", async (req, res) => {
     });
   }
 });
+
 // ----------------------------
 connectDB()
   .then(() => {
